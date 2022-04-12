@@ -1,4 +1,6 @@
+/// <reference lib="dom"/>
 import { expect, Locator } from '@playwright/test';
+import fs from 'fs'
 
 import BasePage from './BasePage';
 
@@ -216,7 +218,6 @@ class MainContent extends BasePage {
 	public emojiPickerFilter(): Locator {
 		return this.getPage().locator('//*[contains(@class, "emoji-picker")]//*[contains(@class, "js-emojipicker-search")]');
 	}
-
 	public emojiPickerEmojiContainer(): Locator {
 		return this.getPage().locator('//*[contains(@class, "emoji-picker")]//*[contains(@class, "emojis")]');
 	}
@@ -227,6 +228,18 @@ class MainContent extends BasePage {
 
 	public emojiSmile(): Locator {
 		return this.getPage().locator('//*[contains(@class, "emoji-picker")]//*[contains(@class, "emoji-smile")]');
+	}
+
+	public modalTitle(): Locator {
+		return this.getPage().locator('#modal-root .rcx-modal__title')
+	}
+
+	public modalCancelButton(): Locator {
+		return this.getPage().locator('#modal-root .rcx-button-group--align-end .rcx-button--ghost')
+	}
+
+	public buttonSend(): Locator {
+		return this.getPage().locator('#modal-root .rcx-button-group--align-end .rcx-button--primary')
 	}
 
 	// Popover
@@ -242,10 +255,10 @@ class MainContent extends BasePage {
 		await expect(this.getPage().locator('(//*[contains(@class, "message") and contains(@class, "body")])[last()]')).toContainText(text);
 	}
 
-	// Sends a message and wait for the message to equal the text sent
-	public async sendMessage(text: any): Promise<void> {
+
+	public async sendMessage(text: string): Promise<void> {
 		await this.setTextToInput(text);
-		await this.sendBtn().click();
+		await this.keyboardPress('Enter')
 		await expect(
 			this.getPage().locator('(//*[contains(@class, "message-body-wrapper")])[last()]/div[contains(@class, "body")]'),
 		).toContainText(text);
@@ -257,13 +270,32 @@ class MainContent extends BasePage {
 	}
 
 	// Clear and sets the text to the input
-	public async setTextToInput(text: any): Promise<void> {
-		// cy.wait(200);
-		await this.messageInput().fill('');
-		if (text) {
-			await this.messageInput().type(text);
-		}
+	public async setTextToInput(text: string): Promise<void> {
+		await this.messageInput().type(text);
+	}
+
+	public async dragAndDropFile(): Promise<void> {
+
+		const contract = await fs.promises.readFile(
+      "./tests/e2e/utils/fixtures/contract.json",
+      "utf-8"
+    )
+
+		const dataTransfer = await this.getPage().evaluateHandle((contract) => {
+      console.log(contract)
+			console.log('callback')
+			const data = new DataTransfer()
+      const file = new File([`${contract}`], "contract.json", {
+        type: "application/json",
+      })
+      data.items.add(file)
+      return data
+    }, contract)
+
+		await this.getPage().dispatchEvent('div.dropzone-overlay.dropzone-overlay--enabled.background-transparent-darkest.color-content-background-color', 'drop', { dataTransfer });
+		// await this.getPage().locator(".#modal-root").elementHandle()
 	}
 }
 
 export default MainContent;
+
