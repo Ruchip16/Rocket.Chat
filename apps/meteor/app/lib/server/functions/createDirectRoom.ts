@@ -94,35 +94,39 @@ export const createDirectRoom = function (members: IUser[], roomExtraData = {}, 
 
 	if (members.length === 1) {
 		// dm to yourself
-		Subscriptions.updateOne(
-			{ rid, 'u._id': members[0]._id },
-			{
-				$set: { open: true },
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				$setOnInsert: generateSubscription(members[0].name! || members[0].username!, members[0].username!, members[0], {
-					...options?.subscriptionExtra,
-				}),
-			},
-			{ upsert: true },
+		Promise.await(
+			Subscriptions.updateOne(
+				{ rid, 'u._id': members[0]._id },
+				{
+					$set: { open: true },
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					$setOnInsert: generateSubscription(members[0].name! || members[0].username!, members[0].username!, members[0], {
+						...options?.subscriptionExtra,
+					}),
+				},
+				{ upsert: true },
+			),
 		);
 	} else {
 		const memberIds = members.map((member) => member._id);
 		const membersWithPreferences = Users.find({ _id: { $in: memberIds } }, { projection: { 'username': 1, 'settings.preferences': 1 } });
 
-		membersWithPreferences.forEach((member) => {
-			const otherMembers = sortedMembers.filter(({ _id }) => _id !== member._id);
-			Subscriptions.updateOne(
-				{ rid, 'u._id': member._id },
-				{
-					...(options?.creator === member._id && { $set: { open: true } }),
-					$setOnInsert: generateSubscription(getFname(otherMembers), getName(otherMembers), member, {
-						...options?.subscriptionExtra,
-						...(options?.creator !== member._id && { open: members.length > 2 }),
-					}),
-				},
-				{ upsert: true },
-			);
-		});
+		Promise.await(
+			membersWithPreferences.forEach(async (member) => {
+				const otherMembers = sortedMembers.filter(({ _id }) => _id !== member._id);
+				await Subscriptions.updateOne(
+					{ rid, 'u._id': member._id },
+					{
+						...(options?.creator === member._id && { $set: { open: true } }),
+						$setOnInsert: generateSubscription(getFname(otherMembers), getName(otherMembers), member, {
+							...options?.subscriptionExtra,
+							...(options?.creator !== member._id && { open: members.length > 2 }),
+						}),
+					},
+					{ upsert: true },
+				);
+			}),
+		);
 	}
 
 	// If the room is new, run a callback
