@@ -43,8 +43,6 @@ const MessageContent: FC<{ message: IMessage; sequential: boolean; subscription?
 
 	const shouldShowReactionList = message.reactions && Object.keys(message.reactions).length;
 
-	const shouldShowBroadcastMetric = broadcast && user.username && !isOwnUserMessage(message, subscription);
-
 	const mineUid = useUserId();
 
 	return (
@@ -108,7 +106,7 @@ const MessageContent: FC<{ message: IMessage; sequential: boolean; subscription?
 
 			{message.location && <MessageLocation location={message.location} />}
 
-			{shouldShowBroadcastMetric && (
+			{broadcast && !!user.username && !isOwnUserMessage(message, subscription) && (
 				<BroadcastMetric replyBroadcast={(): void => replyBroadcast(message)} mid={message._id} username={user.username} />
 			)}
 
