@@ -19,6 +19,7 @@ import MessageBlock from '../../../blocks/MessageBlock';
 import MessageLocation from '../../../location/MessageLocation';
 import { useMessageActions, useMessageOembedIsEnabled, useMessageRunActionLink } from '../../contexts/MessageContext';
 import { useMessageListShowReadReceipt } from '../contexts/MessageListContext';
+import { isOwnUserMessage } from '../lib/isOwnUserMessage';
 import EncryptedMessageRender from './EncryptedMessageRender';
 import ReactionsList from './MessageReactionsList';
 import ReadReceipt from './MessageReadReceipt';
@@ -41,6 +42,8 @@ const MessageContent: FC<{ message: IMessage; sequential: boolean; subscription?
 	const isEncryptedMessage = isE2EEMessage(message);
 
 	const shouldShowReactionList = message.reactions && Object.keys(message.reactions).length;
+
+	const shouldShowBroadcastMetric = broadcast && user.username && !isOwnUserMessage(message, subscription);
 
 	const mineUid = useUserId();
 
@@ -105,7 +108,7 @@ const MessageContent: FC<{ message: IMessage; sequential: boolean; subscription?
 
 			{message.location && <MessageLocation location={message.location} />}
 
-			{broadcast && user.username && (
+			{shouldShowBroadcastMetric && (
 				<BroadcastMetric replyBroadcast={(): void => replyBroadcast(message)} mid={message._id} username={user.username} />
 			)}
 
