@@ -1,6 +1,6 @@
-/// <reference lib="dom"/>
+import fs from 'fs';
+
 import { expect, Locator } from '@playwright/test';
-import fs from 'fs'
 
 import BasePage from './BasePage';
 
@@ -73,7 +73,7 @@ class MainContent extends BasePage {
 	}
 
 	public lastMessageFileName(): Locator {
-		return this.getPage().locator('.message:last-child > div:nth-child(3) > div:nth-child(2) > div:nth-child(1)')
+		return this.getPage().locator('.message:last-child > div:nth-child(3) > div:nth-child(2) > div:nth-child(1)');
 	}
 
 	public lastMessage(): Locator {
@@ -222,6 +222,7 @@ class MainContent extends BasePage {
 	public emojiPickerFilter(): Locator {
 		return this.getPage().locator('//*[contains(@class, "emoji-picker")]//*[contains(@class, "js-emojipicker-search")]');
 	}
+
 	public emojiPickerEmojiContainer(): Locator {
 		return this.getPage().locator('//*[contains(@class, "emoji-picker")]//*[contains(@class, "emojis")]');
 	}
@@ -235,26 +236,31 @@ class MainContent extends BasePage {
 	}
 
 	public modalTitle(): Locator {
-		return this.getPage().locator('#modal-root .rcx-modal__title')
+		return this.getPage().locator('#modal-root .rcx-modal__title');
 	}
 
 	public modalCancelButton(): Locator {
-		return this.getPage().locator('#modal-root .rcx-button-group--align-end .rcx-button--ghost')
+		return this.getPage().locator('#modal-root .rcx-button-group--align-end .rcx-button--ghost');
 	}
 
 	public buttonSend(): Locator {
-		return this.getPage().locator('#modal-root .rcx-button-group--align-end .rcx-button--primary')
+		return this.getPage().locator('#modal-root .rcx-button-group--align-end .rcx-button--primary');
 	}
 
 	public modalFilePreview(): Locator {
-		return this.getPage().locator('//div[@id="modal-root"]//header//following-sibling::div[1]//div//div//img | //div[@id="modal-root"]//header//following-sibling::div[1]//div//div//div//i');
+		return this.getPage().locator(
+			'//div[@id="modal-root"]//header//following-sibling::div[1]//div//div//img | //div[@id="modal-root"]//header//following-sibling::div[1]//div//div//div//i',
+		);
 	}
+
 	public fileName(): Locator {
-		return this.getPage().locator('//div[@id="modal-root"]//fieldset//div[1]//label')
+		return this.getPage().locator('//div[@id="modal-root"]//fieldset//div[1]//label');
 	}
+
 	public fileDescription(): Locator {
-		return this.getPage().locator('//div[@id="modal-root"]//fieldset//div[2]//label')
+		return this.getPage().locator('//div[@id="modal-root"]//fieldset//div[2]//label');
 	}
+
 	// Popovermodal
 	public popoverWrapper(): Locator {
 		return this.getPage().locator('.rc-popover');
@@ -268,10 +274,9 @@ class MainContent extends BasePage {
 		await expect(this.getPage().locator('(//*[contains(@class, "message") and contains(@class, "body")])[last()]')).toContainText(text);
 	}
 
-
 	public async sendMessage(text: string): Promise<void> {
 		await this.setTextToInput(text);
-		await this.keyboardPress('Enter')
+		await this.keyboardPress('Enter');
 		await expect(
 			this.getPage().locator('(//*[contains(@class, "message-body-wrapper")])[last()]/div[contains(@class, "body")]'),
 		).toContainText(text);
@@ -288,49 +293,49 @@ class MainContent extends BasePage {
 	}
 
 	public async dragAndDropFile(): Promise<void> {
-
-		const contract = await fs.promises.readFile(
-      './tests/e2e/utils/fixtures/any_file.txt',
-      'utf-8'
-    )
+		const contract = await fs.promises.readFile('./tests/e2e/utils/fixtures/any_file.txt', 'utf-8');
 
 		const dataTransfer = await this.getPage().evaluateHandle((contract) => {
-      console.log(contract)
-			const data = new DataTransfer()
-      const file = new File([`${contract}`], 'any_file.txt', {
-        type: 'text/plain',
-      })
-      data.items.add(file)
-      return data
-    }, contract)
+			const data = new DataTransfer();
+			const file = new File([`${contract}`], 'any_file.txt', {
+				type: 'text/plain',
+			});
+			data.items.add(file);
+			return data;
+		}, contract);
 
-		await this.getPage().dispatchEvent('div.dropzone-overlay.dropzone-overlay--enabled.background-transparent-darkest.color-content-background-color', 'drop', { dataTransfer });
+		await this.getPage().dispatchEvent(
+			'div.dropzone-overlay.dropzone-overlay--enabled.background-transparent-darkest.color-content-background-color',
+			'drop',
+			{ dataTransfer },
+		);
 	}
 
 	public async cancelClick(): Promise<void> {
-		await this.modalCancelButton().click()
+		await this.modalCancelButton().click();
 	}
+
 	public async sendFileClick(): Promise<void> {
-		await this.buttonSend().click()
+		await this.buttonSend().click();
 	}
 
 	public descriptionInput(): Locator {
-		return this.getPage().locator('//div[@id="modal-root"]//fieldset//div[2]//span//input')
+		return this.getPage().locator('//div[@id="modal-root"]//fieldset//div[2]//span//input');
 	}
 
 	public fileNameInput(): Locator {
-		return this.getPage().locator('//div[@id="modal-root"]//fieldset//div[1]//span//input')
-	}
-	public async setFileName () :Promise<void> {
-		await this.fileNameInput().click({clickCount: 3})
-		await this.keyboardPress('Backspace')
-		await this.fileNameInput().type('any_file1.txt')
+		return this.getPage().locator('//div[@id="modal-root"]//fieldset//div[1]//span//input');
 	}
 
-	public async setDescription () :Promise<void> {
-		await this.descriptionInput().type('any_description')
+	public async setFileName(): Promise<void> {
+		await this.fileNameInput().click({ clickCount: 3 });
+		await this.keyboardPress('Backspace');
+		await this.fileNameInput().type('any_file1.txt');
+	}
+
+	public async setDescription(): Promise<void> {
+		await this.descriptionInput().type('any_description');
 	}
 }
 
 export default MainContent;
-
